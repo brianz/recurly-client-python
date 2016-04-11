@@ -14,6 +14,29 @@ import six
 
 from six.moves import http_client
 
+import pytest
+
+
+from recurly.config import RecurlyConfig
+
+
+@pytest.fixture
+def config():
+    c = RecurlyConfig()
+    c.API_KEY = 'DEADBEEF'
+    c.PRIVATE_KEY = '0cc86846024a4c95a5dfd3111a532d13'
+    return c
+
+
+@pytest.fixture
+def mock_config(request):
+    patcher = mock.patch('recurly.resources.base.config')
+    c = patcher.start()
+    c.API_KEY = 'DEADBEEF'
+    c.PRIVATE_KEY = '0cc86846024a4c95a5dfd3111a532d13'
+    request.addfinalizer(patcher.stop)
+    return c
+
 
 def xml(text):
     doc = ElementTree.fromstring(text)

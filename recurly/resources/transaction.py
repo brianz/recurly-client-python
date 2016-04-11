@@ -37,7 +37,7 @@ class TransactionAccount(Resource):
 
 class TransactionDetails(Resource):
     node_name = 'details'
-    attributes = ('account')
+    attributes = ('account', )
     _classes_for_nodename = {'account': TransactionAccount}
 
 
@@ -55,7 +55,6 @@ class TransactionError(Resource):
 
 class Transaction(Resource):
     """An immediate one-time charge made to a customer's account."""
-
     member_path = 'transactions/%s'
     collection_path = 'transactions'
 
@@ -145,6 +144,3 @@ class Transaction(Resource):
 
         actionator = self._make_actionator(url, method, extra_handler=self._handle_refund_accepted)
         return actionator(**kwargs)
-
-
-Transaction._classes_for_nodename['transaction'] = Transaction

@@ -8,7 +8,7 @@ from .base import Resource
 from .address import Address
 from .billing import BillingInfo
 from .invoice import Invoice
-from .note import Notes
+from .note import Note
 
 
 __all__ = ('Account', )

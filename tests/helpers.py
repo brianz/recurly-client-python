@@ -9,5 +9,3 @@ def xml(text):
         if el.tail and el.tail.isspace():
             el.tail = ''
     return ElementTree.tostring(doc, encoding='UTF-8')
-
-

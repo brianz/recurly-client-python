@@ -187,5 +187,3 @@ class Invoice(Resource):
             return self.redemptions()[0]
         except AttributeError:
             raise AttributeError("redemption")
-
-

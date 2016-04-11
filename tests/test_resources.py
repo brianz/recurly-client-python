@@ -1278,8 +1278,3 @@ class TestResources(RecurlyTest):
         finally:
             with self.mock_request('transaction-balance/account-deleted.xml'):
                 account.delete()
-
-
-if __name__ == '__main__':
-    import unittest
-    unittest.main()

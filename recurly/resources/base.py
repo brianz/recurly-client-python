@@ -33,11 +33,11 @@ class Money(object):
         elif args:
             self.currencies = {config.DEFAULT_CURRENCY: args[0]}
         else:
-            self.currencies = P{
+            self.currencies = {}
 
     @classmethod
     def from_element(cls, elem):
-        currency = P{
+        currency = {}
         for child_el in elem:
             if not child_el.tag:
                 continue
@@ -259,9 +259,12 @@ class Resource(object):
             headers['Content-Type'] = 'application/xml; charset=utf-8'
         if method in ('POST', 'PUT') and body is None:
             headers['Content-Length'] = '0'
+
         connection.request(method, url, body, headers)
+
         if config.SOCKET_TIMEOUT_SECONDS:
             connection.sock.settimeout(config.SOCKET_TIMEOUT_SECONDS)
+
         resp = connection.getresponse()
 
         log = logging.getLogger('recurly.http.response')
@@ -324,7 +327,7 @@ class Resource(object):
         can be directly requested with this method.
 
         """
-        url = urljoin(config.get_base_uri(), cls.member_path % (uuid,))
+        url = urljoin(config.get_base_uri(), cls.member_path % (uuid, ))
         resp, elem = cls.element_for_url(url)
         return cls.from_element(elem)
 
