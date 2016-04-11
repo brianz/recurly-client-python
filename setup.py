@@ -2,6 +2,7 @@ import os.path
 import re
 
 from setuptools import setup
+from setuptools import find_packages
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as README:
     DESCRIPTION = README.read()
@@ -36,7 +37,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: WWW/HTTP',
     ],
-    packages=['recurly'],
+    packages=find_packages(),
     install_requires=[
         'iso8601',
         'backports.ssl_match_hostname',
