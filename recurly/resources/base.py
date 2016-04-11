@@ -14,6 +14,7 @@ from six.moves.urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 from ..errors import PageError
+from ..errors import UnauthorizedError
 from ..errors import error_class_for_http_status
 from ..link_header import parse_link_value
 from ..config import RecurlyConfig as config
@@ -21,21 +22,22 @@ from ..config import RecurlyConfig as config
 
 class Money(object):
     """An amount of money in one or more currencies."""
+
     def __init__(self, *args, **kwargs):
         if args and kwargs:
             raise ValueError("Money may be single currency or multi-currency but not both")
         elif kwargs:
-            self.currencies = dict(kwargs)
+            self.currencies = kwargs
         elif args and len(args) > 1:
             raise ValueError("Multi-currency Money must be instantiated with codes")
         elif args:
-            self.currencies = { config.DEFAULT_CURRENCY: args[0] }
+            self.currencies = {config.DEFAULT_CURRENCY: args[0]}
         else:
-            self.currencies = dict()
+            self.currencies = P{
 
     @classmethod
     def from_element(cls, elem):
-        currency = dict()
+        currency = P{
         for child_el in elem:
             if not child_el.tag:
                 continue
@@ -93,7 +95,6 @@ class Page(list):
                 return int(self.record_size)
         except AttributeError:
             return 0
-
 
     def next_page(self):
         """Return the next `Page` after this one in the result sequence
@@ -166,31 +167,21 @@ class Resource(object):
 
     """
 
-    _classes_for_nodename = dict()
+    _classes_for_nodename = {}
 
+    # Attributes that are not logged with the rest of a `Resource`
+    # of this class when submitted in a ``POST`` or ``PUT`` request.
     sensitive_attributes = ()
-    """Attributes that are not logged with the rest of a `Resource`
-    of this class when submitted in a ``POST`` or ``PUT`` request."""
+
+    # Attributes of a `Resource` of this class that are not serialized
+    # as subelements, but rather attributes of the top level element.
     xml_attribute_attributes = ()
-    """Attributes of a `Resource` of this class that are not serialized
-    as subelements, but rather attributes of the top level element."""
+
+    # Whether a `Resource` of this class inherits a currency from a
+    # parent `Resource`, and therefore should not use `Money` instances
+    # even though this `Resource` class has no ``currency`` attribute of
+    # its own.
     inherits_currency = False
-    """Whether a `Resource` of this class inherits a currency from a
-    parent `Resource`, and therefore should not use `Money` instances
-    even though this `Resource` class has no ``currency`` attribute of
-    its own."""
-
-    def serializable_attributes(self):
-        """ Attributes to be serialized in a ``POST`` or ``PUT`` request.
-        Returns all attributes unless a blacklist is specified
-        """
-
-        if hasattr(self, 'blacklist_attributes'):
-            return [attr for attr in self.attributes if attr not in
-                    self.blacklist_attributes]
-        else:
-            return self.attributes
-
 
     def __init__(self, **kwargs):
         try:
@@ -203,6 +194,8 @@ class Resource(object):
 
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
+
+        self.register_nodename()
 
     @classmethod
     def http_request(cls, url, method='GET', body=None, headers=None):
@@ -219,14 +212,12 @@ class Resource(object):
         respectively.
 
         """
-
         if config.API_KEY is None:
-            raise recurly.UnauthorizedError('RecurlyConfig.API_KEY not set')
+            raise UnauthorizedError('RecurlyConfig.API_KEY not set')
 
         is_non_ascii = lambda s: any(ord(c) >= 128 for c in s)
 
         if is_non_ascii(config.API_KEY) or is_non_ascii(config.SUBDOMAIN):
-
             raise ConfigurationError("""Setting API_KEY or SUBDOMAIN to
                     unicode strings may cause problems. Please use strings.
                     Issue described here:
@@ -285,6 +276,17 @@ class Resource(object):
 
         return resp
 
+    def serializable_attributes(self):
+        """ Attributes to be serialized in a ``POST`` or ``PUT`` request.
+        Returns all attributes unless a blacklist is specified
+
+        """
+        if hasattr(self, 'blacklist_attributes'):
+            return [attr for attr in self.attributes if attr not in
+                    self.blacklist_attributes]
+        else:
+            return self.attributes
+
     def as_log_output(self):
         """Returns an XML string containing a serialization of this
         instance suitable for logging.
@@ -300,19 +302,18 @@ class Resource(object):
         return ElementTree.tostring(elem, encoding='UTF-8')
 
     @classmethod
-    def _learn_nodenames(cls, classes):
-        for resource_class in classes:
-            try:
-                rc_is_subclass = issubclass(resource_class, cls)
-            except TypeError:
-                continue
-            if not rc_is_subclass:
-                continue
-            nodename = getattr(resource_class, 'nodename', None)
-            if nodename is None:
-                continue
+    def register_nodename(cls):
+        nodename = getattr(cls, 'nodename', None)
+        if nodename:
+            Resource._classes_for_nodename[nodename] = cls
 
-            cls._classes_for_nodename[nodename] = resource_class
+    @staticmethod
+    def _subclass_for_nodename(nodename):
+        try:
+            return Resource._classes_for_nodename[nodename]
+        except KeyError:
+            raise ValueError("Could not determine resource class for array member with tag %r"
+                % nodename)
 
     @classmethod
     def get(cls, uuid):
@@ -343,14 +344,6 @@ class Resource(object):
         response_doc = ElementTree.fromstring(response_xml)
 
         return response, response_doc
-
-    @classmethod
-    def _subclass_for_nodename(cls, nodename):
-        try:
-            return cls._classes_for_nodename[nodename]
-        except KeyError:
-            raise ValueError("Could not determine resource class for array member with tag %r"
-                % nodename)
 
     @classmethod
     def value_for_element(cls, elem):
@@ -390,12 +383,12 @@ class Resource(object):
         if attr_type == 'datetime':
             return iso8601.parse_date(elem.text.strip())
         if attr_type == 'array':
-            return [cls._subclass_for_nodename(sub_elem.tag).from_element(sub_elem) for sub_elem in elem]
+            return [Resource._subclass_for_nodename(sub_elem.tag).from_element(sub_elem) for sub_elem in elem]
 
         # Unknown types may be the names of resource classes.
         if attr_type is not None:
             try:
-                value_class = cls._subclass_for_nodename(attr_type)
+                value_class = Resource._subclass_for_nodename(attr_type)
             except ValueError:
                 log.debug("Not converting %r element with type %r to a resource as that matches no known nodename",
                     elem.tag, attr_type)
@@ -404,7 +397,7 @@ class Resource(object):
 
         # Untyped complex elements should still be resource instances. Guess from the nodename.
         if len(elem):  # has children
-            value_class = cls._subclass_for_nodename(elem.tag)
+            value_class = Resource._subclass_for_nodename(elem.tag)
             log.debug("Converting %r tag into a %s", elem.tag, value_class.__name__)
             return value_class.from_element(elem)
 
