@@ -1,11 +1,12 @@
-from contextlib import contextmanager
-from datetime import datetime
 import email
 import logging
 import os
-from os.path import join, dirname
 import time
 import unittest
+
+from contextlib import contextmanager
+from datetime import datetime
+from os.path import join, dirname
 from xml.etree import ElementTree
 
 import mock

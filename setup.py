@@ -1,6 +1,7 @@
-from setuptools import setup
 import os.path
 import re
+
+from setuptools import setup
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as README:
     DESCRIPTION = README.read()
@@ -8,10 +9,10 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as README:
 VERSION_RE = re.compile("^__version__ = '(.+)'$",
                         flags=re.MULTILINE)
 with open(os.path.join(os.path.dirname(__file__),
-                       'recurly', '__init__.py')) as PACKAGE:
+                       'recurly', 'config.py')) as PACKAGE:
     VERSION = VERSION_RE.search(PACKAGE.read()).group(1)
 
-more_install_requires = list()
+more_install_requires = []
 try:
     import ssl
 except ImportError:
@@ -36,9 +37,15 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
     ],
     packages=['recurly'],
-    install_requires=['iso8601', 'backports.ssl_match_hostname', 'six>=1.4.0'] + more_install_requires,
-    tests_require=['mock',
-                   'six'],
+    install_requires=[
+        'iso8601',
+        'backports.ssl_match_hostname',
+        'six>=1.4.0',
+    ] + more_install_requires,
+    tests_require=[
+        'mock',
+        'six',
+    ],
     test_suite='unittest2.collector',
     zip_safe=True,
 )

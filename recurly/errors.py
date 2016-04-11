@@ -1,13 +1,27 @@
+import six
+
 from six.moves import http_client as httplib
 from xml.etree import ElementTree
-import six
+
+
+class PageError(ValueError):
+    """An error raised when requesting to continue to a stream page that
+    doesn't exist.
+
+    This error can be raised when requesting the next page for the last page in
+    a series, or the first page for the first page in a series.
+
+    """
+    pass
+
+class RequestForgeryError(Exception):
+
+    """An error raised when verification of a Recurly.js response fails."""
+    pass
 
 
 class ResponseError(Exception):
-
-    """An error received from the Recurly API in response to an HTTP
-    request."""
-
+    """An error received from the Recurly API in response to an HTTP request."""
     def __init__(self, response_xml):
         self.response_xml = response_xml
 

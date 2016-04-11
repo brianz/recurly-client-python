@@ -1,18 +1,37 @@
 import collections
 import logging
 import time
+
 from xml.etree import ElementTree
 
 import six
-import recurly
 
 from six import StringIO
 from six.moves import urllib, http_client
 from six.moves.urllib.parse import urljoin
 
 
-from recurly import Account, AddOn, Adjustment, BillingInfo, Coupon, Plan, Redemption, Subscription, SubscriptionAddOn, Transaction
-from recurly import Money, NotFoundError, ValidationError, BadRequestError, PageError
+from recurly.config import RecurlyConfig as recurly
+
+from recurly.resources import Account
+from recurly.resources import AddOn
+from recurly.resources import Adjustment
+from recurly.resources import BillingInfo
+from recurly.resources import Coupon
+from recurly.resources import Plan
+from recurly.resources import Redemption
+from recurly.resources import Subscription
+from recurly.resources import SubscriptionAddOn
+from recurly.resources import Transaction
+
+from recurly.resources.base import Money
+
+from recurly.errors import BadRequestError
+from recurly.errors import NotFoundError
+from recurly.errors import PageError
+from recurly.errors import ValidationError
+from recurly.errors import UnauthorizedError
+
 from recurlytests import RecurlyTest, xml
 
 recurly.SUBDOMAIN = 'api'
@@ -26,7 +45,7 @@ class TestResources(RecurlyTest):
         account_code = 'test%s' % self.test_id
         try:
             Account.get(account_code)
-        except recurly.UnauthorizedError as exc:
+        except UnauthorizedError as exc:
             pass
         else:
             self.fail("Updating account with invalid email address did not raise a ValidationError")
@@ -51,7 +70,7 @@ class TestResources(RecurlyTest):
         account.vat_number = '444444-UK'
         with self.mock_request('account/created.xml'):
             account.save()
-        self.assertEqual(account._url, urljoin(recurly.base_uri(), 'accounts/%s' % account_code))
+        self.assertEqual(account._url, urljoin(base_uri(), 'accounts/%s' % account_code))
         self.assertEqual(account.vat_number, '444444-UK')
         self.assertEqual(account.vat_location_enabled, True)
         self.assertEqual(account.cc_emails,
@@ -69,7 +88,7 @@ class TestResources(RecurlyTest):
         self.assertEqual(same_account.account_code, account_code)
         self.assertTrue(same_account.first_name is None)
         self.assertTrue(same_account.entity_use_code == 'I')
-        self.assertEqual(same_account._url, urljoin(recurly.base_uri(), 'accounts/%s' % account_code))
+        self.assertEqual(same_account._url, urljoin(base_uri(), 'accounts/%s' % account_code))
 
         account.username = 'shmohawk58'
         account.email = 'larry.david'
@@ -128,7 +147,7 @@ class TestResources(RecurlyTest):
         with self.mock_request('account/numeric-created.xml'):
             account.save()
         try:
-            self.assertEqual(account._url, urljoin(recurly.base_uri(), 'accounts/%d' % numeric_test_id))
+            self.assertEqual(account._url, urljoin(base_uri(), 'accounts/%d' % numeric_test_id))
         finally:
             with self.mock_request('account/numeric-deleted.xml'):
                 account.delete()

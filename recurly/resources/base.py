@@ -1,24 +1,25 @@
 import base64
-import re
-from datetime import datetime
 import logging
+import re
 import ssl
+
+import six
+import iso8601
+
+from datetime import datetime
+from six.moves import http_client
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import urlsplit
 from xml.etree import ElementTree
 
-import iso8601
-import six
-
-import recurly
-import recurly.errors
-from recurly.link_header import parse_link_value
-from six.moves import http_client
-from six.moves.urllib.parse import urlencode, urljoin, urlsplit
+from ..errors import PageError
+from ..errors import error_class_for_http_status
+from ..link_header import parse_link_value
 
 
 class Money(object):
-
     """An amount of money in one or more currencies."""
-
     def __init__(self, *args, **kwargs):
         if args and kwargs:
             raise ValueError("Money may be single currency or multi-currency but not both")
@@ -60,19 +61,7 @@ class Money(object):
         return name in self.currencies
 
 
-class PageError(ValueError):
-    """An error raised when requesting to continue to a stream page that
-    doesn't exist.
-
-    This error can be raised when requesting the next page for the last page in
-    a series, or the first page for the first page in a series.
-
-    """
-    pass
-
-
 class Page(list):
-
     """A set of related `Resource` instances retrieved together from
     the API.
 
@@ -166,7 +155,6 @@ class Page(list):
 
 
 class Resource(object):
-
     """A Recurly API resource.
 
     This superclass implements the general behavior for all the
@@ -237,6 +225,7 @@ class Resource(object):
         is_non_ascii = lambda s: any(ord(c) >= 128 for c in s)
 
         if is_non_ascii(recurly.API_KEY) or is_non_ascii(recurly.SUBDOMAIN):
+
             raise recurly.ConfigurationError("""Setting API_KEY or SUBDOMAIN to
                     unicode strings may cause problems. Please use strings.
                     Issue described here:
@@ -333,7 +322,7 @@ class Resource(object):
         can be directly requested with this method.
 
         """
-        url = urljoin(recurly.base_uri(), cls.member_path % (uuid,))
+        url = urljoin(base_uri(), cls.member_path % (uuid,))
         resp, elem = cls.element_for_url(url)
         return cls.from_element(elem)
 
@@ -588,7 +577,7 @@ class Resource(object):
         parameters.
 
         """
-        url = urljoin(recurly.base_uri(), cls.collection_path)
+        url = urljoin(base_uri(), cls.collection_path)
         if kwargs:
             url = '%s?%s' % (url, urlencode(kwargs))
         return Page.page_for_url(url)
@@ -610,7 +599,7 @@ class Resource(object):
         return self.put(self._url)
 
     def _create(self):
-        url = urljoin(recurly.base_uri(), self.collection_path)
+        url = urljoin(base_uri(), self.collection_path)
         return self.post(url)
 
     def put(self, url):
@@ -651,7 +640,7 @@ class Resource(object):
         reaction to the given `http_client.HTTPResponse`."""
         response_xml = response.read()
         logging.getLogger('recurly.http.response').debug(response_xml)
-        exc_class = recurly.errors.error_class_for_http_status(response.status)
+        exc_class = error_class_for_http_status(response.status)
         raise exc_class(response_xml)
 
     def to_element(self):

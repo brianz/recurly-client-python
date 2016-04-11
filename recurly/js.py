@@ -3,24 +3,20 @@ import hashlib
 import hmac
 import os
 import re
-import time
 import six
-from six.moves.urllib.parse import urljoin, quote_plus
+import time
 
-import recurly
+from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import quote_plus
 
-
-PRIVATE_KEY = None
-
-
-class RequestForgeryError(Exception):
-    """An error raised when verification of a Recurly.js response fails."""
-    pass
+from .config import base_uri
+from .config import RecurlyConfig
+from .resources.base import Resource
 
 
 def sign(*records):
     """ Signs objects or data dictionary with your Recurly.js private key."""
-    if PRIVATE_KEY is None:
+    if RecurlyConfig.PRIVATE_KEY is None:
         raise ValueError("Recurly.js private key is not set.")
     records = list(records)
     try:
@@ -34,14 +30,14 @@ def sign(*records):
     if 'nonce' not in data:
         data['nonce'] = re.sub(six.b('\W+'), six.b(''), base64.b64encode(os.urandom(32)))
     unsigned = to_query(data)
-    signed = hmac.new(six.b(PRIVATE_KEY), six.b(unsigned), hashlib.sha1).hexdigest()
+    signed = hmac.new(six.b(RecurlyConfig.PRIVATE_KEY), six.b(unsigned), hashlib.sha1).hexdigest()
     return '|'.join([signed, unsigned])
 
 
 def fetch(token):
-    url = urljoin(recurly.base_uri(), 'recurly_js/result/%s' % token)
-    resp, elem = recurly.Resource.element_for_url(url)
-    cls = recurly.Resource.value_for_element(elem)
+    url = urljoin(base_uri(), 'recurly_js/result/%s' % token)
+    resp, elem = Resource.element_for_url(url)
+    cls = Resource.value_for_element(elem)
     return cls.from_element(elem)
 
 

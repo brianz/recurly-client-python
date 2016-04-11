@@ -10,17 +10,17 @@ Simple routines to parse and manipulate Link headers.
 
 __license__ = """
 Copyright (c) 2009 Mark Nottingham
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,20 +57,20 @@ link_splitter = re.compile(LINK_SPLIT)
 
 def parse_link_value(instr):
     """
-    Given a link-value (i.e., after separating the header-value on commas), 
+    Given a link-value (i.e., after separating the header-value on commas),
     return a dictionary whose keys are link URLs and values are dictionaries
     of the parameters for their associated links.
-    
-    Note that internationalised parameters (e.g., title*) are 
+
+    Note that internationalised parameters (e.g., title*) are
     NOT percent-decoded.
-    
+
     Also, only the last instance of a given parameter will be included.
-    
-    For example, 
-    
+
+    For example,
+
     >>> parse_link_value('</foo>; rel="self"; title*=utf-8\'de\'letztes%20Kapitel')
     {'/foo': {'title*': "utf-8'de'letztes%20Kapitel", 'rel': 'self'}}
-    
+
     """
     out = {}
     if not instr:
