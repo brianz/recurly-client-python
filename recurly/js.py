@@ -6,8 +6,8 @@ import re
 import six
 import time
 
-from six.moves.urllib.parse import urljoin
-from six.moves.urllib.parse import quote_plus
+from .utils import quote_plus
+from .utils import urljoin
 
 from .config import base_uri
 from .config import RecurlyConfig

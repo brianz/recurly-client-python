@@ -8,15 +8,16 @@ import iso8601
 
 from datetime import datetime
 from six.moves import http_client
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.parse import urljoin
-from six.moves.urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 from ..errors import PageError
 from ..errors import UnauthorizedError
 from ..errors import error_class_for_http_status
 from ..link_header import parse_link_value
+from ..utils import urlencode
+from ..utils import urljoin
+from ..utils import urlsplit
+
 from ..config import RecurlyConfig as config
 
 

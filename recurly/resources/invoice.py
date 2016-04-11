@@ -1,5 +1,5 @@
-from six.moves.urllib.parse import urljoin
-from xml.etree import ElementTree
+from ..utils import urljoin
+from ..utils import ElementTree
 
 from .base import Resource
 from .tax import TaxDetail
