@@ -13,7 +13,7 @@ from xml.etree import ElementTree
 
 from .base import Resource
 
-from ..config import base_uri
+from ..config import RecurlyConfig as config
 from ..errors import *
 
 
@@ -534,7 +534,7 @@ class Invoice(Resource):
         `
 
         """
-        url = urljoin(base_uri(), cls.member_path % (uuid,))
+        url = urljoin(config.get_base_uri(), cls.member_path % (uuid,))
         pdf_response = cls.http_request(url, headers={'Accept': 'application/pdf'})
         return pdf_response.read()
 
@@ -585,6 +585,7 @@ class Invoice(Resource):
         return self.redemptions()[0]
       except AttributeError:
         raise AttributeError("redemption")
+
 
 class Subscription(Resource):
 
@@ -639,7 +640,7 @@ class Subscription(Resource):
             url = self._url + '/preview'
             return self.post(url)
         else:
-            url = urljoin(base_uri(), self.collection_path) + '/preview'
+            url = urljoin(config.get_base_uri(), self.collection_path) + '/preview'
             return self.post(url)
 
     def update_notes(self, **kwargs):

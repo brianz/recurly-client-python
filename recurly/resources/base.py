@@ -16,6 +16,7 @@ from xml.etree import ElementTree
 from ..errors import PageError
 from ..errors import error_class_for_http_status
 from ..link_header import parse_link_value
+from ..config import RecurlyConfig as config
 
 
 class Money(object):
@@ -28,7 +29,7 @@ class Money(object):
         elif args and len(args) > 1:
             raise ValueError("Multi-currency Money must be instantiated with codes")
         elif args:
-            self.currencies = { recurly.DEFAULT_CURRENCY: args[0] }
+            self.currencies = { config.DEFAULT_CURRENCY: args[0] }
         else:
             self.currencies = dict()
 
@@ -198,7 +199,7 @@ class Resource(object):
         except ValueError:
             pass
         except AttributeError:
-            self.currency = recurly.DEFAULT_CURRENCY
+            self.currency = config.DEFAULT_CURRENCY
 
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
@@ -211,7 +212,7 @@ class Resource(object):
         If the `body` argument is a `Resource` instance, it is serialized
         to XML by calling its `to_element()` method before submitting it.
         Requests are authenticated per the Recurly API specification
-        using the ``recurly.API_KEY`` value for the API key.
+        using the ``config.API_KEY`` value for the API key.
 
         Requests and responses are logged at the ``DEBUG`` level to the
         ``recurly.http.request`` and ``recurly.http.response`` loggers
@@ -219,14 +220,14 @@ class Resource(object):
 
         """
 
-        if recurly.API_KEY is None:
-            raise recurly.UnauthorizedError('recurly.API_KEY not set')
+        if config.API_KEY is None:
+            raise recurly.UnauthorizedError('RecurlyConfig.API_KEY not set')
 
         is_non_ascii = lambda s: any(ord(c) >= 128 for c in s)
 
-        if is_non_ascii(recurly.API_KEY) or is_non_ascii(recurly.SUBDOMAIN):
+        if is_non_ascii(config.API_KEY) or is_non_ascii(config.SUBDOMAIN):
 
-            raise recurly.ConfigurationError("""Setting API_KEY or SUBDOMAIN to
+            raise ConfigurationError("""Setting API_KEY or SUBDOMAIN to
                     unicode strings may cause problems. Please use strings.
                     Issue described here:
                     https://gist.github.com/maximehardy/d3a0a6427d2b6791b3dc""")
@@ -234,19 +235,19 @@ class Resource(object):
         urlparts = urlsplit(url)
         if urlparts.scheme != 'https':
             connection = http_client.HTTPConnection(urlparts.netloc)
-        elif recurly.CA_CERTS_FILE is None:
+        elif config.CA_CERTS_FILE is None:
             connection = http_client.HTTPSConnection(urlparts.netloc)
         else:
-            context = ssl.create_default_context(cafile=recurly.CA_CERTS_FILE)
+            context = ssl.create_default_context(cafile=config.CA_CERTS_FILE)
             connection = http_client.HTTPSConnection(urlparts.netloc, context=context)
 
         headers = {} if headers is None else dict(headers)
         headers.setdefault('Accept', 'application/xml')
         headers.update({
-            'User-Agent': recurly.USER_AGENT
+            'User-Agent': config.USER_AGENT
         })
-        headers['X-Api-Version'] = recurly.api_version()
-        headers['Authorization'] = 'Basic %s' % base64.b64encode(six.b('%s:' % recurly.API_KEY)).decode()
+        headers['X-Api-Version'] = config.API_VERSION
+        headers['Authorization'] = 'Basic %s' % base64.b64encode(six.b('%s:' % config.API_KEY)).decode()
 
         log = logging.getLogger('recurly.http.request')
         if log.isEnabledFor(logging.DEBUG):
@@ -268,8 +269,8 @@ class Resource(object):
         if method in ('POST', 'PUT') and body is None:
             headers['Content-Length'] = '0'
         connection.request(method, url, body, headers)
-        if recurly.SOCKET_TIMEOUT_SECONDS:
-            connection.sock.settimeout(recurly.SOCKET_TIMEOUT_SECONDS)
+        if config.SOCKET_TIMEOUT_SECONDS:
+            connection.sock.settimeout(config.SOCKET_TIMEOUT_SECONDS)
         resp = connection.getresponse()
 
         log = logging.getLogger('recurly.http.response')
@@ -322,7 +323,7 @@ class Resource(object):
         can be directly requested with this method.
 
         """
-        url = urljoin(base_uri(), cls.member_path % (uuid,))
+        url = urljoin(config.get_base_uri(), cls.member_path % (uuid,))
         resp, elem = cls.element_for_url(url)
         return cls.from_element(elem)
 
@@ -577,7 +578,7 @@ class Resource(object):
         parameters.
 
         """
-        url = urljoin(base_uri(), cls.collection_path)
+        url = urljoin(config.get_base_uri(), cls.collection_path)
         if kwargs:
             url = '%s?%s' % (url, urlencode(kwargs))
         return Page.page_for_url(url)
@@ -599,7 +600,7 @@ class Resource(object):
         return self.put(self._url)
 
     def _create(self):
-        url = urljoin(base_uri(), self.collection_path)
+        url = urljoin(config.get_base_uri(), self.collection_path)
         return self.post(url)
 
     def put(self, url):

@@ -32,13 +32,9 @@ class RecurlyConfig(object):
 
     PRIVATE_KEY = None
 
+    @classmethod
+    def get_base_uri(cls):
+        if cls.SUBDOMAIN is None:
+            raise ValueError('recurly.SUBDOMAIN not set')
 
-def base_uri():
-    if RecurlyConfig.SUBDOMAIN is None:
-        raise ValueError('recurly.SUBDOMAIN not set')
-
-    return RecurlyConfig.BASE_URI % (RecurlyConfig.SUBDOMAIN, )
-
-
-def api_version():
-    return RecurlyConfig.API_VERSION
+        return cls.BASE_URI % (cls.SUBDOMAIN, )
