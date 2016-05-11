@@ -76,3 +76,5 @@ class Subscription(Resource):
             return 'plan/plan_code'
         else:
             return name
+
+Subscription.register_nodename()

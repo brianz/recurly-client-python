@@ -19,3 +19,6 @@ class Note(Resource):
                 continue
             setattr(new_note, child_el.tag, child_el.text)
         return new_note
+
+
+Note.register_nodename()

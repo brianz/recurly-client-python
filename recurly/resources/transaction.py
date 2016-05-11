@@ -22,6 +22,8 @@ class TransactionBillingInfo(Resource):
         'transaction_uuid',
     )
 
+TransactionBillingInfo.register_nodename()
+
 
 class TransactionAccount(Resource):
     node_name = 'account'
@@ -34,11 +36,15 @@ class TransactionAccount(Resource):
     )
     _classes_for_nodename = {'billing_info': TransactionBillingInfo}
 
+TransactionAccount.register_nodename()
+
 
 class TransactionDetails(Resource):
     node_name = 'details'
     attributes = ('account', )
     _classes_for_nodename = {'account': TransactionAccount}
+
+TransactionDetails.register_nodename()
 
 
 class TransactionError(Resource):
@@ -51,6 +57,8 @@ class TransactionError(Resource):
         'error_code',
         'gateway_error_code',
     )
+
+TransactionError.register_nodename()
 
 
 class Transaction(Resource):
@@ -144,3 +152,5 @@ class Transaction(Resource):
 
         actionator = self._make_actionator(url, method, extra_handler=self._handle_refund_accepted)
         return actionator(**kwargs)
+
+Transaction.register_nodename()

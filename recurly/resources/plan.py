@@ -80,3 +80,8 @@ class Plan(Resource):
         """Make the given `AddOn` available to subscribers on this plan."""
         url = urljoin(self._url, '%s/add_ons' % self.plan_code)
         return add_on.post(url)
+
+
+AddOn.register_nodename()
+SubscriptionAddOn.register_nodename()
+Plan.register_nodename()

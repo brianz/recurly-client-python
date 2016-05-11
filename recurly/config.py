@@ -1,6 +1,6 @@
 import sys
 
-__version__ = '2.2.19'
+__version__ = '2.2.20'
 __python_version__ = '.'.join(map(str, sys.version_info[:3]))
 
 

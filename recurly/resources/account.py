@@ -202,3 +202,6 @@ class Account(Resource):
         response_xml = response.read()
         logging.getLogger('recurly.http.response').debug(response_xml)
         billing_info.update_from_element(ElementTree.fromstring(response_xml))
+
+
+Account.register_nodename()

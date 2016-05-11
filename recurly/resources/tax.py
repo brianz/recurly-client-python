@@ -14,3 +14,5 @@ class TaxDetail(Resource):
         'tax_rate',
         'tax_in_cents',
     )
+
+TaxDetail.register_nodename()

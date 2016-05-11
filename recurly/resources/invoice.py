@@ -187,3 +187,7 @@ class Invoice(Resource):
             return self.redemptions()[0]
         except AttributeError:
             raise AttributeError("redemption")
+
+
+Adjustment.register_nodename()
+Invoice.register_nodename()

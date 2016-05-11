@@ -124,3 +124,7 @@ class Redemption(Resource):
         'currency',
         'created_at',
     )
+
+
+Coupon.register_nodename()
+Redemption.register_nodename()

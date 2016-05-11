@@ -42,3 +42,5 @@ class BillingInfo(Resource):
     )
     sensitive_attributes = ('number', 'verification_value', 'account_number')
     xml_attribute_attributes = ('type',)
+
+BillingInfo.register_nodename()

@@ -17,3 +17,6 @@ class Address(Resource):
         'country',
         'phone',
     )
+
+
+Address.register_nodename()

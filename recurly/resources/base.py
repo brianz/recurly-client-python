@@ -196,8 +196,6 @@ class Resource(object):
         for key, value in six.iteritems(kwargs):
             setattr(self, key, value)
 
-        self.register_nodename()
-
     @classmethod
     def http_request(cls, url, method='GET', body=None, headers=None):
         """Make an HTTP request with the given method to the given URL,
